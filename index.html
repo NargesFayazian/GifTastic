@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>GifTastic</title>
+
+    <style type="text/css">
+        .button-v {
+            margin: 1%;
+        }
+
+        .col-sm-8 {
+            float: left;
+        }
+
+        .col-sm-4 {
+            float: right;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <h1>GifTastic</h1>
+            <div class="col-sm-12" id="buttons-view">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-8">
+                <div class="card " style="max-width: 18rem; border: 1% solid black"></div>
+
+            </div>
+            <div class="col-sm-4">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <form id="animal-form">
+                            <label for="animal-input">Add an animal:</label>
+                            <input type="text" id="animal-input"><br>
+                            <input id="add-animal" type="submit" value="submit">
+                        </form>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <h2>Show images</h2>
+                            <select id="myselect">
+                                <option value="1">10</option>
+                                <option value="2">20</option>
+                                <option value="3">30</option>
+                                <option value="4">40</option>
+                                <option value="5">50</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+            <script>
+                //---------------------- variable-------------------------------------------------------------------------
+                var animals = ["cat", "dog", "fish", "mouse"];
+                renderButtons();
+                //---------------new button-----------------------------------------------------------------------
+                $("#add-animal").on("click", function (event) {
+                    event.preventDefault();
+                    var animalnew = $("#animal-input").val().trim();
+                    animals.push(animalnew);
+                    console.log(animals);
+                    renderButtons();
+                });
+                //----------------render Button-----------------------------------------------------------        
+
+                function renderButtons() {
+                    $("#buttons-view").empty();
+                    for (var i = 0; i < animals.length; i++) {
+                        var a = $("<button>");
+                        a.addClass("button-v")
+                        a.text(animals[i]);
+                        $("#buttons-view").append(a);
+                    }
+                }
+
+                //----------------------ajax-----------------------------------------------------------------
+                $(document).on("click", ".button-v", function () {
+                    var animal = $(this).text();
+                    console.log(animal)
+                    var limit = $("#myselect option:selected").text();
+
+                    var queryURL = "https://api.giphy.com/v1/gifs/search?q=" +
+                        animal + "&api_key=gHvbPxv65aDY68DlGHWjVzvtHFAeDTOS&limit=" + limit;
+                    console.log(queryURL);
+                    $.ajax({
+                        url: queryURL,
+                        method: "GET"
+                    })
+                        .then(function (response) {
+
+                            var results = response.data;
+                            for (var i = 0; i < results.length; i++) {
+                                if (results[i].rating === "g" || results[i].rating === "pg-13") {
+                                    var animalImage = $("<img class='image' >");
+                                    animalImage.attr("src", results[i].images.fixed_height.url);
+                                    animalImage.attr("data-state", "still");
+                                    var animalDiv = $("<div class='card-body'>");
+                                    var p = $("<p class='card-text'>").text("Rating: " + results[i].rating);
+                                    $(".card").prepend(animalImage, animalDiv);
+                                    animalDiv.append(p);
+                                    animalImage.attr("value",results[i].id)
+                                }
+                            }
+                            $(".image").on("click", function (event) {
+                                
+                                var id=$(this).attr("value");
+                                console.log(id)
+                                var state = $(this).attr("data-state");
+                                if (state === "still") {
+                                    $(this).attr("src", "https://media1.giphy.com/media/" + id + "/200_s.gif");
+                                    console.log(state)
+                                    $(this).attr("data-state", "animate");
+                                } else {
+                                    $(this).attr("src", "https://media1.giphy.com/media/" + id + "/200.gif");
+                                    $(this).attr("data-state", "still");
+                                    console.log(state)
+                                }
+                            });
+                            
+                        });
+                });
+
+            </script>
+</body>
+
+</html>
